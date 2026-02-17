@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const session = require('express-session');
-const pgSession = require('connect-pg-simple')(session); // ← これを追加
+const pgSession = require('connect-pg-simple')(session); // 追加
 const bcrypt = require('bcryptjs');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
@@ -17,25 +17,26 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// セッション設定（データベース保存版）
+// セッション設定（ここをデータベース保存版にしました）
 app.use(session({
     store: new pgSession({
-        conString: process.env.SUPABASE_URL.replace('https', 'postgres').replace('.supabase.co', '.supabase.com:5432/postgres'), // Supabaseへの接続設定
+        // Supabaseへの直接接続。環境変数から自動生成
+        conString: process.env.SUPABASE_URL.replace('https', 'postgres').replace('.supabase.co', '.supabase.com:5432/postgres'),
         tableName: 'session'
     }),
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
     resave: false,
     saveUninitialized: false,
-    proxy: true, // Renderなどのプロキシ環境で必要
+    proxy: true, 
     cookie: {
-        secure: true,
-        sameSite: 'none',
+        secure: true, // RenderはHTTPSなのでtrue
+        sameSite: 'none', // Cookieのブロックを防ぐ
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000
+        maxAge: 24 * 60 * 60 * 1000 // 24時間
     }
 }));
 
-app.use(express.static('frontend'));
+app.use(express.static('./')); // あなたのフォルダ構成に合わせて変更
 
 // LINE Messaging APIの設定
 const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
