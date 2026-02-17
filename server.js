@@ -19,11 +19,11 @@ app.use(express.json());
 
 // セッション設定（ここをデータベース保存版にしました）
 app.use(session({
-    store: new pgSession({
-        // Supabaseへの直接接続。環境変数から自動生成
-        conString: process.env.SUPABASE_URL.replace('https', 'postgres').replace('.supabase.co', '.supabase.com:5432/postgres'),
-        tableName: 'session'
-    }),
+    // server.js の26行目付近をこれだけに書き換える
+store: new pgSession({
+    conString: process.env.DATABASE_URL,
+    tableName: 'session'
+}),
     secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
     resave: false,
     saveUninitialized: false,
