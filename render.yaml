@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: line-order-app-v2
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: LINE_CHANNEL_ACCESS_TOKEN
+        sync: false
+      - key: LINE_USER_ID
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: PORT
+        value: 3000

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>発注フォーム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .nav a {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .nav a:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .nav a.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .required {
+            color: #e74c3c;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: inherit;
+            background: white;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .product-info {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+        }
+        
+        .product-info.show {
+            display: block;
+        }
+        
+        .product-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .product-info-label {
+            color: #666;
+        }
+        
+        .product-info-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .btn-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 450px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header h2 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .modal-body {
+            margin: 24px 0;
+        }
+        
+        .confirm-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .confirm-item:last-child {
+            border-bottom: none;
+        }
+        
+        .confirm-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .confirm-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .btn-cancel {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-confirm {
+            background: linear-gradient(135deg, #06c755 0%, #00b140 100%);
+            color: white;
+        }
+        
+        .message {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 色選択ボックス */
+        .color-option {
+            cursor: pointer;
+            display: inline-block;
+        }
+        
+        .color-option input[type="radio"] {
+            display: none;
+        }
+        
+        .color-box {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .color-option:hover .color-box {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .color-option input[type="radio"]:checked + .color-box {
+            border-color: #333;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <script src="auth.js"></script>
+    <div class="container">
+        <div class="header">
+            <h1>📦 発注フォーム</h1>
+            <div id="userInfo"></div>
+            <div class="nav">
+                <a href="/">商品管理</a>
+                <a href="/order.html" class="active">発注する</a>
+                <a href="/history.html">発注履歴</a>
+            </div>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="card">
+            <h2 style="margin-bottom: 16px;">📝 発注リスト</h2>
+            
+            <div id="orderList" style="margin-bottom: 20px; display: none;">
+                <div style="background: #f8f9fa; padding: 16px; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="font-size: 14px; color: #666; margin: 0;">追加された商品</h3>
+                        <button type="button" onclick="clearOrderList()" style="padding: 6px 12px; background: #f0f0f0; border: none; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                            すべてクリア
+                        </button>
+                    </div>
+                    <div id="orderItems"></div>
+                    <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #e1e8ed;">
+                        <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                            <span>合計:</span>
+                            <span id="totalItems">0 品目</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <form id="orderForm">
+                <div class="form-group">
+                    <label>カテゴリ選択</label>
+                    <select id="categorySelect" onchange="filterProductsByCategory()">
+                        <option value="">すべてのカテゴリ</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>商品選択 <span class="required">*</span></label>
+                    <select id="productSelect" required>
+                        <option value="">まずカテゴリを選択してください</option>
+                    </select>
+                    <div class="product-info" id="productInfo"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>数量 <span class="required">*</span></label>
+                    <input type="number" id="quantity" min="1" step="1" placeholder="例: 10" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>単位 <span class="required">*</span></label>
+                    <input type="text" id="unit" placeholder="自動入力されます" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label>備考</label>
+                    <textarea id="notes" placeholder="特記事項があれば記入してください"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>ヘッダーの色</label>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <label class="color-option">
+                            <input type="radio" name="headerColor" value="#667eea" checked>
+                            <span class="color-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">紫</span>
+                        </label>
+                        <label class="color-option">
+                            <input type="radio" name="headerColor" value="#4A90E2">
+                            <span class="color-box" style="background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);">青</span>
+                        </label>
+                        <label class="color-option">
+                            <input type="radio" name="headerColor" value="#06c755">
+                            <span class="color-box" style="background: linear-gradient(135deg, #06c755 0%, #05a344 100%);">緑</span>
+                        </label>
+                        <label class="color-option">
+                            <input type="radio" name="headerColor" value="#FF9500">
+                            <span class="color-box" style="background: linear-gradient(135deg, #FF9500 0%, #E68500 100%);">橙</span>
+                        </label>
+                        <label class="color-option">
+                            <input type="radio" name="headerColor" value="#e74c3c">
+                            <span class="color-box" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">赤</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 12px;">
+                    <button type="submit" class="btn-submit" style="flex: 1;">リストに追加</button>
+                    <button type="button" onclick="sendBulkOrder()" class="btn-submit" style="flex: 1; background: linear-gradient(135deg, #06c755 0%, #00b140 100%);" id="bulkSendBtn" disabled>
+                        まとめて送信 (<span id="bulkCount">0</span>)
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        const API_ENDPOINT = '/api';
+        let products = [];
+        let categories = [];
+        let orderData = {};
+        let orderQueue = []; // 発注リスト
+        
+        // ページ読み込み時にログインチェックと商品一覧を取得
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Auth.checkAuth();
+            Auth.displayUserInfo();
+            await loadProducts();
+        });
+        
+        // 商品一覧を読み込み
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_ENDPOINT}/products`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    products = result.products;
+                    extractCategories();
+                    displayCategories();
+                    displayAllProducts();
+                } else {
+                    showMessage('error', '商品の読み込みに失敗しました');
+                }
+            } catch (error) {
+                console.error('エラー:', error);
+                showMessage('error', '商品の読み込みに失敗しました');
+            }
+        }
+        
+        // カテゴリを抽出
+        function extractCategories() {
+            const categorySet = new Set();
+            products.forEach(product => {
+                if (product.category) {
+                    categorySet.add(product.category);
+                }
+            });
+            categories = Array.from(categorySet).sort();
+        }
+        
+        // カテゴリ選択肢を表示
+        function displayCategories() {
+            const select = document.getElementById('categorySelect');
+            
+            select.innerHTML = '<option value="">すべてのカテゴリ</option>';
+            
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                select.appendChild(option);
+            });
+        }
+        
+        // すべての商品を表示
+        function displayAllProducts() {
+            displayProductOptions(products);
+        }
+        
+        // カテゴリでフィルタリング
+        function filterProductsByCategory() {
+            const selectedCategory = document.getElementById('categorySelect').value;
+            
+            if (selectedCategory === '') {
+                displayProductOptions(products);
+            } else {
+                const filtered = products.filter(p => p.category === selectedCategory);
+                displayProductOptions(filtered);
+            }
+            
+            // 商品情報をクリア
+            document.getElementById('productInfo').classList.remove('show');
+            document.getElementById('unit').value = '';
+        }
+        
+        // 商品選択肢を表示
+        function displayProductOptions(productList) {
+            const select = document.getElementById('productSelect');
+            
+            if (productList.length === 0) {
+                select.innerHTML = '<option value="">該当する商品がありません</option>';
+                return;
+            }
+            
+            select.innerHTML = '<option value="">商品を選択してください</option>';
+            productList.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = product.name;
+                option.dataset.product = JSON.stringify(product);
+                select.appendChild(option);
+            });
+        }
+        
+        // 商品選択時の処理
+        document.getElementById('productSelect').addEventListener('change', (e) => {
+            const selectedOption = e.target.selectedOptions[0];
+            const productInfo = document.getElementById('productInfo');
+            
+            if (!selectedOption.value) {
+                productInfo.classList.remove('show');
+                document.getElementById('unit').value = '';
+                return;
+            }
+            
+            const product = JSON.parse(selectedOption.dataset.product);
+            
+            // 単位を自動入力
+            document.getElementById('unit').value = product.default_unit;
+            
+            // 商品情報を表示
+            let infoHTML = '';
+            if (product.category) {
+                infoHTML += `
+                    <div class="product-info-item">
+                        <span class="product-info-label">カテゴリ:</span>
+                        <span class="product-info-value">${product.category}</span>
+                    </div>
+                `;
+            }
+            if (product.supplier) {
+                infoHTML += `
+                    <div class="product-info-item">
+                        <span class="product-info-label">仕入先:</span>
+                        <span class="product-info-value">${product.supplier}</span>
+                    </div>
+                `;
+            }
+            if (product.price) {
+                infoHTML += `
+                    <div class="product-info-item">
+                        <span class="product-info-label">単価:</span>
+                        <span class="product-info-value">¥${parseFloat(product.price).toLocaleString()}</span>
+                    </div>
+                `;
+            }
+            
+            if (infoHTML) {
+                productInfo.innerHTML = infoHTML;
+                productInfo.classList.add('show');
+            }
+        });
+        
+        // 発注フォーム送信（リストに追加）
+        document.getElementById('orderForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const selectedOption = document.getElementById('productSelect').selectedOptions[0];
+            const product = selectedOption.value ? JSON.parse(selectedOption.dataset.product) : null;
+            
+            if (!product) {
+                showMessage('error', '商品を選択してください');
+                return;
+            }
+            
+            const quantity = document.getElementById('quantity').value;
+            const unit = document.getElementById('unit').value;
+            const notes = document.getElementById('notes').value;
+            
+            if (!quantity) {
+                showMessage('error', '数量を入力してください');
+                return;
+            }
+            
+            // リストに追加
+            const headerColor = document.querySelector('input[name="headerColor"]:checked').value;
+            
+            orderQueue.push({
+                productId: product.id,
+                productName: product.name,
+                quantity: quantity,
+                unit: unit,
+                notes: notes,
+                headerColor: headerColor
+            });
+            
+            updateOrderList();
+            
+            // フォームを完全にリセット
+            document.getElementById('categorySelect').value = '';
+            document.getElementById('productSelect').value = '';
+            document.getElementById('productSelect').innerHTML = '<option value="">まずカテゴリを選択してください</option>';
+            document.getElementById('quantity').value = '';
+            document.getElementById('unit').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('productInfo').classList.remove('show');
+            
+            // 全商品を再表示
+            displayAllProducts();
+            
+            showMessage('success', `${product.name}をリストに追加しました`);
+        });
+        
+        // メッセージ表示
+        function showMessage(type, text) {
+            const message = document.getElementById('message');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            message.style.display = 'block';
+            
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 5000);
+        }
+        
+        // === まとめて送信機能 ===
+        
+        // 発注リストを更新
+        function updateOrderList() {
+            const listDiv = document.getElementById('orderList');
+            const itemsDiv = document.getElementById('orderItems');
+            const bulkBtn = document.getElementById('bulkSendBtn');
+            const bulkCount = document.getElementById('bulkCount');
+            const totalItems = document.getElementById('totalItems');
+            
+            if (orderQueue.length === 0) {
+                listDiv.style.display = 'none';
+                bulkBtn.disabled = true;
+                return;
+            }
+            
+            listDiv.style.display = 'block';
+            bulkBtn.disabled = false;
+            bulkCount.textContent = orderQueue.length;
+            totalItems.textContent = `${orderQueue.length} 品目`;
+            
+            itemsDiv.innerHTML = orderQueue.map((item, index) => `
+                <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: bold; margin-bottom: 4px;">${item.productName}</div>
+                        <div style="font-size: 13px; color: #666;">
+                            <span style="color: #e74c3c; font-weight: bold;">${item.quantity}</span> ${item.unit}
+                            ${item.notes ? `<br><span style="font-size: 12px;">備考: ${item.notes}</span>` : ''}
+                        </div>
+                    </div>
+                    <button onclick="removeFromOrderList(${index})" style="padding: 6px 10px; background: #fee; color: #c33; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                        削除
+                    </button>
+                </div>
+            `).join('');
+        }
+        
+        // リストから削除
+        function removeFromOrderList(index) {
+            const item = orderQueue[index];
+            orderQueue.splice(index, 1);
+            updateOrderList();
+            showMessage('success', `${item.productName}をリストから削除しました`);
+        }
+        
+        // リストをクリア
+        function clearOrderList() {
+            if (!confirm('発注リストをすべてクリアしますか？')) {
+                return;
+            }
+            orderQueue = [];
+            updateOrderList();
+            showMessage('success', '発注リストをクリアしました');
+        }
+        
+        // まとめて送信
+        async function sendBulkOrder() {
+            if (orderQueue.length === 0) {
+                showMessage('error', '発注する商品がありません');
+                return;
+            }
+            
+            if (!confirm(`${orderQueue.length}件の発注をLINEに送信しますか？`)) {
+                return;
+            }
+            
+            try {
+                console.log('送信データ:', orderQueue); // デバッグ用
+                
+                const response = await fetch(`${API_ENDPOINT}/send-bulk-order`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        orders: orderQueue
+                    })
+                });
+                
+                console.log('レスポンスステータス:', response.status); // デバッグ用
+                
+                const result = await response.json();
+                console.log('レスポンス内容:', result); // デバッグ用
+                
+                if (result.success) {
+                    showMessage('success', result.message);
+                    orderQueue = [];
+                    updateOrderList();
+                } else {
+                    showMessage('error', result.error || '送信に失敗しました');
+                    console.error('エラー詳細:', result);
+                }
+            } catch (error) {
+                console.error('送信エラー:', error);
+                showMessage('error', `送信に失敗しました: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

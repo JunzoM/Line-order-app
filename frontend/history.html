@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>発注履歴</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .nav a {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .nav a:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .nav a.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        
+        .filter-group select {
+            padding: 10px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f8f9fa;
+        }
+        
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #e1e8ed;
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-ordered {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-confirmed {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .badge-shipped {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .badge-delivered {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .table-container {
+                font-size: 14px;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script src="auth.js"></script>
+    <div class="container">
+        <div class="header">
+            <h1>📊 発注履歴</h1>
+            <div id="userInfo"></div>
+            <div class="nav">
+                <a href="/">商品管理</a>
+                <a href="/order.html">発注する</a>
+                <a href="/history.html" class="active">発注履歴</a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-label">総発注件数</div>
+                    <div class="stat-value" id="totalOrders">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">今月の発注</div>
+                    <div class="stat-value" id="monthOrders">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">処理中</div>
+                    <div class="stat-value" id="pendingOrders">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="filters">
+                <div class="filter-group">
+                    <label>ステータス</label>
+                    <select id="statusFilter" onchange="applyFilters()">
+                        <option value="">すべて</option>
+                        <option value="ordered">発注済み</option>
+                        <option value="confirmed">確認済み</option>
+                        <option value="shipped">発送済み</option>
+                        <option value="delivered">納品済み</option>
+                        <option value="cancelled">キャンセル</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>商品名検索</label>
+                    <input type="text" id="productNameFilter" placeholder="商品名を入力" oninput="applyFilters()">
+                </div>
+                
+                <div class="filter-group">
+                    <label>発注者</label>
+                    <select id="userFilter" onchange="applyFilters()">
+                        <option value="">すべて</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>期間</label>
+                    <select id="periodFilter" onchange="applyFilters()">
+                        <option value="">すべて</option>
+                        <option value="today">今日</option>
+                        <option value="week">今週</option>
+                        <option value="month">今月</option>
+                        <option value="custom">カスタム</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="customDateRange" style="display: none; margin-bottom: 20px; display: flex; gap: 12px;">
+                <div style="flex: 1;">
+                    <label style="display: block; font-size: 12px; margin-bottom: 4px;">開始日</label>
+                    <input type="date" id="startDate" onchange="applyFilters()" style="width: 100%; padding: 8px; border: 2px solid #e1e8ed; border-radius: 8px;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="display: block; font-size: 12px; margin-bottom: 4px;">終了日</label>
+                    <input type="date" id="endDate" onchange="applyFilters()" style="width: 100%; padding: 8px; border: 2px solid #e1e8ed; border-radius: 8px;">
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="color: #666; font-size: 14px;">
+                    <span id="filterResultCount">0</span> 件の発注を表示中
+                </div>
+                <button onclick="resetFilters()" style="padding: 8px 16px; background: #f0f0f0; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    フィルターをリセット
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>発注日時</th>
+                            <th>商品名</th>
+                            <th>数量</th>
+                            <th>ステータス</th>
+                            <th>LINE送信</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px;">
+                                読み込み中...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_ENDPOINT = '/api';
+        let allOrders = [];
+        let filteredOrders = [];
+        let userList = [];
+        
+        // ページ読み込み時にログインチェックと発注履歴を取得
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Auth.checkAuth();
+            Auth.displayUserInfo();
+            loadOrders();
+            
+            // カスタム期間の表示/非表示
+            document.getElementById('periodFilter').addEventListener('change', (e) => {
+                const customRange = document.getElementById('customDateRange');
+                if (e.target.value === 'custom') {
+                    customRange.style.display = 'flex';
+                } else {
+                    customRange.style.display = 'none';
+                }
+            });
+        });
+        
+        // 発注履歴を読み込み
+        async function loadOrders() {
+            try {
+                const response = await fetch(`${API_ENDPOINT}/orders`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    allOrders = result.orders;
+                    filteredOrders = allOrders;
+                    extractUsers();
+                    populateUserFilter();
+                    applyFilters();
+                    updateStats(allOrders);
+                }
+            } catch (error) {
+                console.error('エラー:', error);
+                document.getElementById('ordersBody').innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <div class="empty-state-icon">⚠️</div>
+                            <div>データの読み込みに失敗しました</div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // ユーザー一覧を抽出
+        function extractUsers() {
+            const users = [...new Set(allOrders.map(o => o.user_id).filter(Boolean))];
+            // ユーザー名はordersテーブルには無いので、別途取得が必要
+            // 簡易的にユーザーIDで表示
+        }
+        
+        // ユーザーフィルターを生成
+        function populateUserFilter() {
+            // 今回はユーザー名がorder情報に含まれていないため省略
+            // 必要に応じて別途APIを追加
+        }
+        
+        // フィルター適用
+        function applyFilters() {
+            const status = document.getElementById('statusFilter').value;
+            const productName = document.getElementById('productNameFilter').value.toLowerCase();
+            const period = document.getElementById('periodFilter').value;
+            
+            filteredOrders = allOrders.filter(order => {
+                // ステータス
+                if (status && order.status !== status) {
+                    return false;
+                }
+                
+                // 商品名
+                if (productName && !order.product_name.toLowerCase().includes(productName)) {
+                    return false;
+                }
+                
+                // 期間
+                if (period) {
+                    const orderDate = new Date(order.ordered_at);
+                    const now = new Date();
+                    
+                    if (period === 'today') {
+                        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                        if (orderDate < today) return false;
+                    } else if (period === 'week') {
+                        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        if (orderDate < weekAgo) return false;
+                    } else if (period === 'month') {
+                        const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                        if (orderDate < monthAgo) return false;
+                    } else if (period === 'custom') {
+                        const startDate = document.getElementById('startDate').value;
+                        const endDate = document.getElementById('endDate').value;
+                        
+                        if (startDate && orderDate < new Date(startDate)) return false;
+                        if (endDate && orderDate > new Date(endDate + 'T23:59:59')) return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            displayOrders(filteredOrders);
+            document.getElementById('filterResultCount').textContent = filteredOrders.length;
+        }
+        
+        // フィルターリセット
+        function resetFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('productNameFilter').value = '';
+            document.getElementById('userFilter').value = '';
+            document.getElementById('periodFilter').value = '';
+            document.getElementById('customDateRange').style.display = 'none';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            applyFilters();
+        }
+        
+        // 発注履歴を表示
+        function displayOrders(orders) {
+            const tbody = document.getElementById('ordersBody');
+            
+            if (orders.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div class="empty-state-icon">📦</div>
+                            <div>発注履歴がありません</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = orders.map(order => {
+                const orderedAt = new Date(order.ordered_at);
+                
+                return `
+                    <tr>
+                        <td>${orderedAt.toLocaleString('ja-JP', { 
+                            year: 'numeric', 
+                            month: '2-digit', 
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</td>
+                        <td><strong>${order.product_name}</strong></td>
+                        <td>${order.quantity} ${order.unit}</td>
+                        <td>${getStatusBadge(order.status)}</td>
+                        <td>${order.line_sent ? '✅' : '❌'}</td>
+                        <td>
+                            <div class="actions">
+                                <select class="btn-sm" onchange="updateStatus('${order.id}', this.value)">
+                                    <option value="">ステータス変更</option>
+                                    <option value="ordered" ${order.status === 'ordered' ? 'disabled' : ''}>発注済み</option>
+                                    <option value="confirmed" ${order.status === 'confirmed' ? 'disabled' : ''}>確認済み</option>
+                                    <option value="shipped" ${order.status === 'shipped' ? 'disabled' : ''}>発送済み</option>
+                                    <option value="delivered" ${order.status === 'delivered' ? 'disabled' : ''}>納品済み</option>
+                                    <option value="cancelled" ${order.status === 'cancelled' ? 'disabled' : ''}>キャンセル</option>
+                                </select>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // ステータスバッジを取得
+        function getStatusBadge(status) {
+            const badges = {
+                'ordered': '<span class="badge badge-ordered">発注済み</span>',
+                'confirmed': '<span class="badge badge-confirmed">確認済み</span>',
+                'shipped': '<span class="badge badge-shipped">発送済み</span>',
+                'delivered': '<span class="badge badge-delivered">納品済み</span>',
+                'cancelled': '<span class="badge badge-cancelled">キャンセル</span>'
+            };
+            return badges[status] || status;
+        }
+        
+        // 統計情報を更新
+        function updateStats(orders) {
+            // 総発注件数
+            document.getElementById('totalOrders').textContent = orders.length;
+            
+            // 今月の発注
+            const now = new Date();
+            const thisMonth = orders.filter(order => {
+                const orderDate = new Date(order.ordered_at);
+                return orderDate.getMonth() === now.getMonth() && 
+                       orderDate.getFullYear() === now.getFullYear();
+            });
+            document.getElementById('monthOrders').textContent = thisMonth.length;
+            
+            // 処理中（発注済み + 確認済み + 発送済み）
+            const pending = orders.filter(order => 
+                ['ordered', 'confirmed', 'shipped'].includes(order.status)
+            );
+            document.getElementById('pendingOrders').textContent = pending.length;
+        }
+        
+        // ステータスを更新
+        async function updateStatus(orderId, newStatus) {
+            if (!newStatus) return;
+            
+            try {
+                const response = await fetch(`${API_ENDPOINT}/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadOrders(); // 再読み込み
+                } else {
+                    alert('ステータスの更新に失敗しました');
+                }
+            } catch (error) {
+                console.error('エラー:', error);
+                alert('ステータスの更新に失敗しました');
+            }
+        }
+    </script>
+</body>
+</html>

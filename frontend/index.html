@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .nav {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .nav a {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .nav a:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .nav a.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 24px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input, select, textarea {
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-edit {
+            background: #3498db;
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f8f9fa;
+        }
+        
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #e1e8ed;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .message {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-container {
+                font-size: 14px;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script src="auth.js"></script>
+    <div class="container">
+        <div class="header">
+            <h1>📦 発注システム管理</h1>
+            <div id="userInfo"></div>
+            <div class="nav">
+                <a href="/" class="active">商品管理</a>
+                <a href="/order.html">発注する</a>
+                <a href="/history.html">発注履歴</a>
+            </div>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="card">
+            <h2>新規商品登録</h2>
+            <form id="productForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>商品名 *</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>デフォルト単位 *</label>
+                        <select id="default_unit" required>
+                            <option value="">選択してください</option>
+                            <option value="個">個</option>
+                            <option value="箱">箱</option>
+                            <option value="ケース">ケース</option>
+                            <option value="パック">パック</option>
+                            <option value="kg">kg</option>
+                            <option value="g">g</option>
+                            <option value="リットル">リットル</option>
+                            <option value="本">本</option>
+                            <option value="袋">袋</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>カテゴリ</label>
+                        <input type="text" id="category" placeholder="例: 野菜">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>仕入先</label>
+                        <input type="text" id="supplier" placeholder="例: 田中農園">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>単価（円）</label>
+                        <input type="number" id="price" min="0" step="0.01" placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label>備考</label>
+                    <textarea id="notes" rows="3" placeholder="商品に関するメモ"></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">商品を登録</button>
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">クリア</button>
+            </form>
+        </div>
+        
+        <div class="card">
+            <h2>登録商品一覧</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #555;">商品名検索</label>
+                        <input type="text" id="searchProductName" placeholder="商品名を入力" oninput="applyProductFilters()" style="width: 100%; padding: 10px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #555;">カテゴリ</label>
+                        <select id="filterCategory" onchange="applyProductFilters()" style="width: 100%; padding: 10px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 14px;">
+                            <option value="">すべて</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #555;">単位</label>
+                        <select id="filterUnit" onchange="applyProductFilters()" style="width: 100%; padding: 10px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 14px;">
+                            <option value="">すべて</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #555;">仕入先</label>
+                        <select id="filterSupplier" onchange="applyProductFilters()" style="width: 100%; padding: 10px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 14px;">
+                            <option value="">すべて</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #555;">状態</label>
+                        <select id="filterStatus" onchange="applyProductFilters()" style="width: 100%; padding: 10px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 14px;">
+                            <option value="">すべて</option>
+                            <option value="active">有効</option>
+                            <option value="inactive">無効</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="color: #666; font-size: 14px;">
+                        <span id="productCount">0</span> 件の商品を表示中
+                    </div>
+                    <button onclick="resetProductFilters()" style="padding: 8px 16px; background: #f0f0f0; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background 0.3s;" onmouseover="this.style.background='#e0e0e0'" onmouseout="this.style.background='#f0f0f0'">
+                        フィルターをリセット
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table id="productsTable">
+                    <thead>
+                        <tr>
+                            <th>商品名</th>
+                            <th>単位</th>
+                            <th>カテゴリ</th>
+                            <th>仕入先</th>
+                            <th>単価</th>
+                            <th>状態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                読み込み中...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_ENDPOINT = '/api';
+        let editingProductId = null;
+        let allProducts = [];
+        let filteredProducts = [];
+        
+        // ページ読み込み時に管理者権限チェックと商品一覧を取得
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Auth.requireAdmin();
+            Auth.displayUserInfo();
+            loadProducts();
+        });
+        
+        // 商品登録フォーム送信
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const productData = {
+                name: document.getElementById('name').value,
+                default_unit: document.getElementById('default_unit').value,
+                category: document.getElementById('category').value || null,
+                supplier: document.getElementById('supplier').value || null,
+                price: document.getElementById('price').value || null,
+                notes: document.getElementById('notes').value || null
+            };
+            
+            try {
+                let response;
+                if (editingProductId) {
+                    // 更新
+                    response = await fetch(`${API_ENDPOINT}/products/${editingProductId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...productData, is_active: true })
+                    });
+                } else {
+                    // 新規登録
+                    response = await fetch(`${API_ENDPOINT}/products`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(productData)
+                    });
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('success', result.message);
+                    resetForm();
+                    loadProducts();
+                } else {
+                    showMessage('error', result.error);
+                }
+            } catch (error) {
+                console.error('エラー:', error);
+                showMessage('error', '商品の登録に失敗しました');
+            }
+        });
+        
+        // 商品一覧を読み込み
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_ENDPOINT}/products`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    allProducts = result.products;
+                    filteredProducts = allProducts;
+                    populateFilterOptions();
+                    applyProductFilters();
+                } else {
+                    showMessage('error', '商品の読み込みに失敗しました');
+                }
+            } catch (error) {
+                console.error('エラー:', error);
+                showMessage('error', '商品の読み込みに失敗しました');
+            }
+        }
+        
+        // フィルター選択肢を生成
+        function populateFilterOptions() {
+            // カテゴリ
+            const categories = [...new Set(allProducts.map(p => p.category).filter(Boolean))].sort();
+            const categorySelect = document.getElementById('filterCategory');
+            categorySelect.innerHTML = '<option value="">すべて</option>';
+            categories.forEach(cat => {
+                categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+            
+            // 単位
+            const units = [...new Set(allProducts.map(p => p.default_unit).filter(Boolean))].sort();
+            const unitSelect = document.getElementById('filterUnit');
+            unitSelect.innerHTML = '<option value="">すべて</option>';
+            units.forEach(unit => {
+                unitSelect.innerHTML += `<option value="${unit}">${unit}</option>`;
+            });
+            
+            // 仕入先
+            const suppliers = [...new Set(allProducts.map(p => p.supplier).filter(Boolean))].sort();
+            const supplierSelect = document.getElementById('filterSupplier');
+            supplierSelect.innerHTML = '<option value="">すべて</option>';
+            suppliers.forEach(supplier => {
+                supplierSelect.innerHTML += `<option value="${supplier}">${supplier}</option>`;
+            });
+        }
+        
+        // フィルター適用
+        function applyProductFilters() {
+            const searchText = document.getElementById('searchProductName').value.toLowerCase();
+            const category = document.getElementById('filterCategory').value;
+            const unit = document.getElementById('filterUnit').value;
+            const supplier = document.getElementById('filterSupplier').value;
+            const status = document.getElementById('filterStatus').value;
+            
+            filteredProducts = allProducts.filter(product => {
+                // 商品名検索
+                if (searchText && !product.name.toLowerCase().includes(searchText)) {
+                    return false;
+                }
+                
+                // カテゴリ
+                if (category && product.category !== category) {
+                    return false;
+                }
+                
+                // 単位
+                if (unit && product.default_unit !== unit) {
+                    return false;
+                }
+                
+                // 仕入先
+                if (supplier && product.supplier !== supplier) {
+                    return false;
+                }
+                
+                // 状態
+                if (status === 'active' && !product.is_active) {
+                    return false;
+                }
+                if (status === 'inactive' && product.is_active) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            displayProducts(filteredProducts);
+            document.getElementById('productCount').textContent = filteredProducts.length;
+        }
+        
+        // フィルターリセット
+        function resetProductFilters() {
+            document.getElementById('searchProductName').value = '';
+            document.getElementById('filterCategory').value = '';
+            document.getElementById('filterUnit').value = '';
+            document.getElementById('filterSupplier').value = '';
+            document.getElementById('filterStatus').value = '';
+            applyProductFilters();
+        }
+        
+        // 商品を表示
+        function displayProducts(products) {
+            const tbody = document.getElementById('productsBody');
+            
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">登録された商品がありません</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = products.map(product => `
+                <tr>
+                    <td><strong>${product.name}</strong></td>
+                    <td>${product.default_unit}</td>
+                    <td>${product.category || '-'}</td>
+                    <td>${product.supplier || '-'}</td>
+                    <td>${product.price ? '¥' + parseFloat(product.price).toLocaleString() : '-'}</td>
+                    <td>
+                        <span class="badge ${product.is_active ? 'badge-active' : 'badge-inactive'}">
+                            ${product.is_active ? '有効' : '無効'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-edit" onclick="editProduct('${product.id}')">編集</button>
+                            <button class="btn btn-danger" onclick="deleteProduct('${product.id}', '${product.name}')">削除</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // 商品編集
+        async function editProduct(id) {
+            try {
+                const response = await fetch(`${API_ENDPOINT}/products`);
+                const result = await response.json();
+                
+                const product = result.products.find(p => p.id === id);
+                if (!product) return;
+                
+                document.getElementById('name').value = product.name;
+                document.getElementById('default_unit').value = product.default_unit;
+                document.getElementById('category').value = product.category || '';
+                document.getElementById('supplier').value = product.supplier || '';
+                document.getElementById('price').value = product.price || '';
+                document.getElementById('notes').value = product.notes || '';
+                
+                editingProductId = id;
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showMessage('success', '商品情報を編集モードにしました');
+            } catch (error) {
+                console.error('エラー:', error);
+                showMessage('error', '商品情報の読み込みに失敗しました');
+            }
+        }
+        
+        // 商品削除
+        async function deleteProduct(id, name) {
+            if (!confirm(`「${name}」を削除してもよろしいですか？`)) return;
+            
+            try {
+                const response = await fetch(`${API_ENDPOINT}/products/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('success', result.message);
+                    loadProducts();
+                } else {
+                    showMessage('error', result.error);
+                }
+            } catch (error) {
+                console.error('エラー:', error);
+                showMessage('error', '商品の削除に失敗しました');
+            }
+        }
+        
+        // フォームリセット
+        function resetForm() {
+            document.getElementById('productForm').reset();
+            editingProductId = null;
+        }
+        
+        // メッセージ表示
+        function showMessage(type, text) {
+            const message = document.getElementById('message');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            message.style.display = 'block';
+            
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
