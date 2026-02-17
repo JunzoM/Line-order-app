@@ -17,17 +17,22 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// セッション設定
+// セッション設定（データベース保存版）
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
+    store: new pgSession({
+        conString: process.env.SUPABASE_URL.replace('https', 'postgres').replace('.supabase.co', '.supabase.com:5432/postgres'), // Supabaseへの接続設定
+        tableName: 'session'
+    }),
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false,
-cookie: {
-    secure: true, // 常にtrueにする（RenderはHTTPSなのでOK）
-    sameSite: 'none', // これを追加！他サイト扱いされるのを防ぎます
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000
-}
+    proxy: true, // Renderなどのプロキシ環境で必要
+    cookie: {
+        secure: true,
+        sameSite: 'none',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000
+    }
 }));
 
 app.use(express.static('frontend'));
