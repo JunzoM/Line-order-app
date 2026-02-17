@@ -21,11 +21,12 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
     resave: false,
     saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24時間
-    }
+cookie: {
+    secure: true, // 常にtrueにする（RenderはHTTPSなのでOK）
+    sameSite: 'none', // これを追加！他サイト扱いされるのを防ぎます
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000
+}
 }));
 
 app.use(express.static('frontend'));
