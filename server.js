@@ -28,7 +28,7 @@ app.use(session({
     }
 }));
 
-app.use(express.static('./'));
+app.use(express.static('frontend'));
 
 // LINE Messaging APIの設定
 const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
